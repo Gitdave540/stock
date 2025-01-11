@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promille Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(135deg, #fdfdfd, #f1f1f1); /* Light gray and white gradient */
+            color: #333; /* Neutral dark gray for text */
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #dcdcdc; /* Soft gray border */
+            border-radius: 10px;
+            background-color: #ffffff; /* Elegant white */
+            margin-bottom: 40px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        button {
+            color: #4B4B4B; /* Deep grey, maintaining elegance without stark contrast */
+            font-family: 'Didot', serif; /* Thin, elegant serif font with sophisticated strokes */
+            font-size: 20px; /* Slightly larger for legibility and presence */
+            font-weight: 300; /* Thin font weight, to keep it light and graceful */
+            text-transform: none;
+            padding: 14px 28px; /* Balanced padding for smooth, comfortable clicks */
+            border: 1px solid rgba(255, 215, 115, 0.2); /* Subtle golden border for a refined touch */
+            border-radius: 50px; /* Soft, rounded edges for a delicate appearance */
+            cursor: pointer;
+            outline: none; /* Remove default outline */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow for depth */
+            transition: all 0.3s ease-in-out; /* Smooth transitions for hover and active states */
+            position: relative; /* For pseudo-element positioning */
+        }
+        
+        /* Hover effect */
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.9); /* Keep background color the same as default */
+            box-shadow: 0 4px 15px rgba(255, 215, 115, 0.1); /* Soft golden glow around the button */
+            transform: translateY(-3px); /* Subtle lift to simulate the distillation feel */
+        }
+        
+        /* Active state for a smooth press effect */
+        button:active {
+            background-color: rgba(255, 255, 255, 0.9); /* Keep background color the same as default */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Light shadow persists */
+            transform: translateY(1px); /* Gentle press-in effect */
+        }
+        
+        /* Pseudo-element for additional glow effect */
+        button::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 215, 115, 0.05); /* Soft golden glow */
+            border-radius: 50px;
+            z-index: -1; /* Placed beneath the text */
+            transition: all 0.3s ease;
+        }
+        
+        /* Hover effect on the pseudo-element */
+        button:hover::after {
+            background: rgba(255, 215, 115, 0.15); /* Soft golden hue deepens on hover */
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555; /* Medium gray for labels */
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd; /* Light gray border for inputs */
+            border-radius: 5px;
+            background-color: #fafafa; /* Light gray background */
+            color: #333;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e8f5e9; /* Soft green */
+            border: 1px solid #c8e6c9; /* Slightly darker green border */
+            border-radius: 5px;
+            text-align: center;
+            color: #2e7d32; /* Rich green text */
+        }
+        .result img {
+            max-width: 200px;
+            height: auto;
+            margin-top: 15px;
+        }
+        .philosophy {
+            margin-top: 20px;
+            font-style: italic;
+            color: #888; /* Light gray text for philosophy */
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Promille Calculator</h1>
+        <div class="input-group">
+            <label for="liter">Flüssigkeit vorhanden in Liter:</label>
+            <input type="number" id="liter" placeholder="Enter value (e.g., 100)" required>
+        </div>
+        <div class="input-group">
+            <label for="promille">Flüssigkeit vorhanden in Promille:</label>
+            <input type="number" id="promille" placeholder="Enter value (e.g., 46)" required>
+        </div>
+        <div class="input-group">
+            <label for="targetPromille">Zu erreichende gesammt in Promille:</label>
+            <input type="number" id="targetPromille" placeholder="Enter value (e.g., 34)" required>
+        </div>
+        <div class="input-group">
+            <label for="addedPromille">Zugefügte Flüssigkeit in Promille:</label>
+            <input type="number" id="addedPromille" placeholder="Enter value (e.g., 0)" required>
+        </div>
+        <div class="input-group">
+            <label for="temperature">Aktuelle Temperatur in °C (20° als Standard):</label>
+            <input type="number" id="temperature" placeholder="20" value="20" required>
+        </div>
+        <button onclick="calculate()">Berechnen</button>
+        <div id="results" class="result" style="display:none;">
+            <p><strong>Beizufügende Liter:</strong> <span id="addedLiters"></span> l</p>
+            <p><strong>Totales Liter:</strong> <span id="totalLiters"></span> l</p>
+            <p><strong>Totales Promille:</strong> <span id="totalPromille"></span> ‰</p>
+            <img id="resultImage" src="Logo_LD-removebg-preview.png" alt="Logo">
+        </div>
+        <div id="philosophy" class="philosophy" style="display:none;">
+            <!-- Random philosophical quote will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Function to get correction factor based on temperature
+        function getCorrectionFactor(temperature) {
+            const correctionFactors = {
+                10: 0.997,
+                15: 0.995,
+                20: 1.000, // Base temperature
+                25: 1.003,
+                30: 1.005
+            };
+    
+            // Interpolation for non-tabulated values
+            if (temperature < 10) return correctionFactors[10];
+            if (temperature > 30) return correctionFactors[30];
+    
+            const keys = Object.keys(correctionFactors).map(Number);
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (temperature >= keys[i] && temperature <= keys[i + 1]) {
+                    const t1 = keys[i];
+                    const t2 = keys[i + 1];
+                    const f1 = correctionFactors[t1];
+                    const f2 = correctionFactors[t2];
+                    return f1 + ((temperature - t1) / (t2 - t1)) * (f2 - f1);
+                }
+            }
+            return 1.000; // Default fallback
+        }
+    
+        // Array of philosophical quotes
+        const quotes = [
+            "Distillation: where science turns raw nature into liquid gold.",
+            "In every drop, chemistry meets craftsmanship.",
+            "Distilling is science in motion, with flavor as the result.", 
+            "The best spirits don’t age—they evolve into liquid wisdom.",
+            "A distiller’s dream is not just to create a spirit, but to inspire an experience."
+        ];
+
+        function calculate() {
+            // Input values
+            const liter = parseFloat(document.getElementById("liter").value);
+            const promille = parseFloat(document.getElementById("promille").value);
+            const targetPromille = parseFloat(document.getElementById("targetPromille").value);
+            const addedPromille = parseFloat(document.getElementById("addedPromille").value);
+            const temperature = parseFloat(document.getElementById("temperature").value);
+
+            // Ensure values are valid
+            if (isNaN(liter) || isNaN(promille) || isNaN(targetPromille) || isNaN(addedPromille) || isNaN(temperature)) {
+                alert("Bitte geben Sie gültige Werte ein.");
+                return;
+            }
+
+            // Apply correction factor for temperature
+            const correctionFactor = getCorrectionFactor(temperature);
+            const correctedPromille = promille * correctionFactor;
+
+            // Calculations based on promille values
+            let addedLiters;
+            if (targetPromille > correctedPromille) {
+                // Enrichment: Adding higher promille liquid
+                if (addedPromille <= targetPromille) {
+                    alert("Das zugefügte Promille muss höher als das Ziel-Promille sein.");
+                    return;
+                }
+                addedLiters = ((liter * (targetPromille - correctedPromille)) / (addedPromille - targetPromille));
+            } else if (targetPromille < correctedPromille) {
+                // Dilution: Adding lower promille liquid
+                if (addedPromille >= targetPromille) {
+                    alert("Das zugefügte Promille muss niedriger als das Ziel-Promille sein.");
+                    return;
+                }
+                addedLiters = ((liter * (correctedPromille - targetPromille)) / (targetPromille - addedPromille));
+            } else {
+                alert("Aktuelles und Ziel-Promille sind gleich. Keine Berechnung notwendig.");
+                return;
+            }
+
+            const totalLiters = liter + addedLiters;
+
+            // Display results
+            document.getElementById("addedLiters").textContent = addedLiters.toFixed(2);
+            document.getElementById("totalLiters").textContent = totalLiters.toFixed(2);
+            document.getElementById("totalPromille").textContent = targetPromille.toFixed(2);
+
+            document.getElementById("results").style.display = "block";
+
+            // Show random philosophical quote
+            const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById("philosophy").textContent = randomQuote;
+            document.getElementById("philosophy").style.display = "block";
+        }
+    </script>
+</body>
+</html>
